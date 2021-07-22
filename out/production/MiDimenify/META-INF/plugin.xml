@@ -1,12 +1,16 @@
 <idea-plugin>
     <id>com.xiaomi.dsg.dimenify</id>
     <name>MiDimenify</name>
-    <version>1.0</version>
+    <version>1.4</version>
     <vendor email="qiuling@xiaomi.com" url="https://github.com/lyp82nlf">qiuling</vendor>
 
-    <description>自动生成dimens文件</description>
+    <description><![CDATA[
+    <h3>Auto Generate Dimens</h3>
+    <h3>You can use plug-ins to automate the generation of Dimens files
+    You can choose for yourself the directory you need to build The plug-in will automatically help you store your configuration options</h3>]]></description>
 
-    <change-notes>第一版本</change-notes>
+    <change-notes><![CDATA[
+    <h3>Additional description and Fix some bugs</h3>]]></change-notes>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for description -->
     <idea-version since-build="173.0"/>
