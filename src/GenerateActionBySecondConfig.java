@@ -1,32 +1,25 @@
-import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileTypes.StdFileTypes;
-import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.xml.XmlAttributeImpl;
 import com.intellij.psi.impl.source.xml.XmlDocumentImpl;
 import com.intellij.psi.impl.source.xml.XmlTagImpl;
 import com.intellij.psi.impl.source.xml.XmlTextImpl;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
-import dialog.SingleDimenAllConfigDialog;
 import dialog.SingleDimenDialog;
 import model.Dimen;
 import model.TmpBean;
 import util.Constants;
-import util.ModelUtil;
 
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GenerateAction extends AbstractDimenAction {
+public class GenerateActionBySecondConfig extends AbstractDimenAction {
     String attributeName;
 
 
@@ -119,7 +112,7 @@ public class GenerateAction extends AbstractDimenAction {
     }
 
     private void showScaleDialog(String suffixType) {
-        SingleDimenAllConfigDialog singleDimenDialog = new SingleDimenAllConfigDialog(project, suffixType, data);
+        SingleDimenDialog singleDimenDialog = new SingleDimenDialog(project, suffixType, data, "(Second Config)");
         singleDimenDialog.show();
         int invalidIndex = singleDimenDialog.invalidBucketIndex();
         if (singleDimenDialog.isOK() && invalidIndex == -1) {
@@ -158,6 +151,6 @@ public class GenerateAction extends AbstractDimenAction {
 
     @Override
     protected String getSaveKey() {
-        return PropertiesComponent.getInstance().getValue(Constants.CURRENT_SAVE_KEY, Constants.SAVE_KEY_ALL_CONFIG_1);
+        return Constants.SAVE_KEY_SECOND_CONFIG;
     }
 }

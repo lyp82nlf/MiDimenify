@@ -2,6 +2,11 @@ package util;
 
 public interface Constants {
     String SAVE_KEY = "com.mi.dsg";
+    String SAVE_KEY_ALL_CONFIG_1 = "com.mi.dsg.all.config1";
+    String SAVE_KEY_ALL_CONFIG_2 = "com.mi.dsg.all.config2";
+    String SAVE_KEY_FIRST_CONFIG = "com.mi.dsg.first.key";
+    String SAVE_KEY_SECOND_CONFIG = "com.mi.dsg.senond.key";
+    String CURRENT_SAVE_KEY = "com.mi.dsg.save.key";
     String INIT_MODEL_JSON = "[{\"bucket\": \"dimens\",\"directory\": \"values\",\"factorSp\": 2.75,\"factorDp\": 2.75,\"isSelected\": true,\"isMandatory\": true}, {\"bucket\": \"dimens-nxhdpi\",\"factorSp\": 2.75,\"factorDp\":  2.75,\"directory\": \"values-nxhdpi\",\"isSelected\": true,\"isMandatory\": true}, {\"bucket\": \"dimens-xxhdpi\",\"factorSp\": 3,\"factorDp\": 3,\"directory\": \"values-xxhdpi\",\"isSelected\": true,\"isMandatory\": true}, {\"bucket\": \"dimens-xxxhdpi\",\"factorSp\": 2.75,\"factorDp\": 2.75,\"directory\": \"values-xxxhdpi\",\"isSelected\": true,\"isMandatory\": true}]";
     String VALUES_PREFIX = "values-";
     String SCALE_TEXT_PREFIX = "Please a scale value for ";
@@ -31,6 +36,7 @@ public interface Constants {
             , "Could not map xml the file to a density bucket. Please check if the source density bucket was exists."
     };
     String ERROR_TITLE = "Error";
+    String TIPS_TITLE = "Tips";
     String TITLE = "Set scale factors for ";
     String METRIC = " metric";
     String DEFAULT_BUCKET = "sw600dp-land";

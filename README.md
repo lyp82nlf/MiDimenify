@@ -9,6 +9,7 @@
 ### 安装方法
 1. 在plugin中搜索MiDimenify
 2. 点击[这里](https://plugins.jetbrains.com/plugin/17216-midimenify)下载jar包 直接安装
+
 ### 使用方法
 - 在任意dimens文件中填上设计图的数值
 - 点击generate菜单

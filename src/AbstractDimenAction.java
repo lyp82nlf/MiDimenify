@@ -47,7 +47,7 @@ public abstract class AbstractDimenAction extends AnAction {
     public void actionPerformed(AnActionEvent e) {
         Locale.setDefault(new Locale("pt", "BR"));
         project = e.getRequiredData(CommonDataKeys.PROJECT);
-        data = ModelUtil.fromJson(PropertiesComponent.getInstance().getValue(Constants.SAVE_KEY, Constants.INIT_MODEL_JSON));
+        data = ModelUtil.fromJson(PropertiesComponent.getInstance().getValue(getSaveKey(), Constants.INIT_MODEL_JSON));
         boolean hasZeroValues = false;
         for (Dimen datum : data) {
             if (datum.getFactorSp() == 0) {
@@ -76,9 +76,9 @@ public abstract class AbstractDimenAction extends AnAction {
     protected void migrateData() {
         if (!PropertiesComponent.getInstance().getBoolean(MIGRATION_FLAG)) {
             for (Dimen datum : data) {
-                datum.setFactorDp(PropertiesComponent.getInstance().getFloat(Constants.SAVE_KEY + Constants.DP + datum.getBucket(), datum.getFactorDp()));
-                datum.setFactorSp(PropertiesComponent.getInstance().getFloat(Constants.SAVE_KEY + Constants.SP + datum.getBucket(), datum.getFactorSp()));
-                datum.setFactorPx(PropertiesComponent.getInstance().getFloat(Constants.SAVE_KEY + Constants.PX + datum.getBucket(), datum.getFactorPx()));
+                datum.setFactorDp(PropertiesComponent.getInstance().getFloat(getSaveKey() + Constants.DP + datum.getBucket(), datum.getFactorDp()));
+                datum.setFactorSp(PropertiesComponent.getInstance().getFloat(getSaveKey() + Constants.SP + datum.getBucket(), datum.getFactorSp()));
+                datum.setFactorPx(PropertiesComponent.getInstance().getFloat(getSaveKey() + Constants.PX + datum.getBucket(), datum.getFactorPx()));
             }
             PropertiesComponent.getInstance().setValue(MIGRATION_FLAG, true);
         }
@@ -87,7 +87,7 @@ public abstract class AbstractDimenAction extends AnAction {
 
     protected void saveValues(ArrayList<Dimen> data) {
         String value = ModelUtil.toJson(data);
-        PropertiesComponent.getInstance().setValue(Constants.SAVE_KEY, value);
+        PropertiesComponent.getInstance().setValue(getSaveKey(), value);
     }
 
 
@@ -95,7 +95,7 @@ public abstract class AbstractDimenAction extends AnAction {
 
         PsiDirectory psiDirectory = psiFile.getParent();
 
-        String value = PropertiesComponent.getInstance().getValue(Constants.SAVE_KEY, Constants.INIT_MODEL_JSON);
+        String value = PropertiesComponent.getInstance().getValue(getSaveKey(), Constants.INIT_MODEL_JSON);
         ArrayList<Dimen> data = ModelUtil.fromJson(value);
         for (int i = 0; i < data.size(); i++) {
             if (psiDirectory.getName().equals(data.get(i).getDirectory())) {
@@ -260,6 +260,8 @@ public abstract class AbstractDimenAction extends AnAction {
 
 
     }
+
+    protected abstract String getSaveKey();
 
     protected String getFormattedValue(float v) {
 

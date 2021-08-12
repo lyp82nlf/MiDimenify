@@ -1,37 +1,27 @@
 package dialog;
 
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.LabeledComponent;
 import com.intellij.ui.components.JBScrollPane;
-
 import model.Dimen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import util.Constants;
+import util.ModelUtil;
 
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.GroupLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
-
-public class SingleDimenDialog extends DialogWrapper {
+public class SingleDimenAllConfigDialog extends DialogWrapper {
     private JPanel controlPanel;
     private JBScrollPane scrollPane;
     private List<Component> bucketLabels = new ArrayList<>();
@@ -45,16 +35,38 @@ public class SingleDimenDialog extends DialogWrapper {
 
     String suffixType;
 
-    public SingleDimenDialog(@Nullable Project project, String suffixType, ArrayList<Dimen> data, String titleSuffix) {
+    public SingleDimenAllConfigDialog(@Nullable Project project, String suffixType, ArrayList<Dimen> data) {
         super(project);
         this.suffixType = suffixType;
         this.data = data;
-        setTitle(Constants.TITLE + suffixType + Constants.METRIC + titleSuffix);
+        setTitle(Constants.TITLE + suffixType + Constants.METRIC);
         initializePanel(suffixType);
         init();
     }
 
+    private void clear() {
+        for (int i = 0; i < bucketLabels.size(); i++) {
+            if ( bucketLabels.get(i) != null) {
+                bucketLabels.get(i).setVisible(false);
+            }
+            if (selectionValues.size() > i && selectionValues.get(i) != null) {
+                selectionValues.get(i).setVisible(false);
+            }
+            if (bucketScaleFactors.size() > i && bucketScaleFactors.get(i) != null) {
+                bucketScaleFactors.get(i).setVisible(false);
+            }
+            if (removeButtons.size() > i && removeButtons.get(i) != null) {
+                removeButtons.get(i).setVisible(false);
+            }
+        }
+        bucketLabels.clear();
+        selectionValues.clear();
+        bucketScaleFactors.clear();
+        removeButtons.clear();
+    }
+
     private void addInitialFields(String suffixType) {
+        clear();
         for (int i = 0; i < data.size(); i++) {
             final Dimen dimen = data.get(i);
             JLabel bucketLabel = new JLabel();
@@ -62,7 +74,7 @@ public class SingleDimenDialog extends DialogWrapper {
             bucketLabel.setText(dimen.getBucket());
             final JTextField scaleFactor = new JTextField();
             bucketScaleFactors.add(scaleFactor);
-            scaleFactor.setColumns(20);
+            scaleFactor.setColumns(10);
             scaleFactor.getDocument().addDocumentListener(new DocumentListener() {
                 private void setData() {
                     float val = 0;
@@ -73,9 +85,9 @@ public class SingleDimenDialog extends DialogWrapper {
                     }
                     if (suffixType.equals("dp")) {
                         dimen.setFactorDp(val);
-                    } else if (suffixType.equals("px")){
+                    } else if (suffixType.equals("px")) {
                         dimen.setFactorPx(val);
-                    }else {
+                    } else {
                         dimen.setFactorSp(val);
                     }
                 }
@@ -118,31 +130,9 @@ public class SingleDimenDialog extends DialogWrapper {
 
     }
 
-    private void clear() {
-        for (int i = 0; i < bucketLabels.size(); i++) {
-            if ( bucketLabels.get(i) != null) {
-                bucketLabels.get(i).setVisible(false);
-            }
-            if (selectionValues.size() > i && selectionValues.get(i) != null) {
-                selectionValues.get(i).setVisible(false);
-            }
-            if (bucketScaleFactors.size() > i && bucketScaleFactors.get(i) != null) {
-                bucketScaleFactors.get(i).setVisible(false);
-            }
-            if (removeButtons.size() > i && removeButtons.get(i) != null) {
-                removeButtons.get(i).setVisible(false);
-            }
-        }
-        bucketLabels.clear();
-        selectionValues.clear();
-        bucketScaleFactors.clear();
-        removeButtons.clear();
-    }
-
     private void initializePanel(String suffixType) {
-        clear();
         controlPanel = new JPanel();
-        scrollPane = new JBScrollPane(controlPanel, JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        scrollPane = new JBScrollPane(controlPanel, JBScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         addInitialFields(suffixType);
         layout = new GroupLayout(controlPanel);
@@ -196,10 +186,48 @@ public class SingleDimenDialog extends DialogWrapper {
     @Override
     protected Action[] createActions() {
         Action[] actions = super.createActions();
-        Action[] actionsAdd = new Action[actions.length + 1];
+        Action[] actionsAdd = new Action[actions.length + 5];
         for (int i = 0; i < actions.length; i++) {
             actionsAdd[i] = actions[i];
         }
+        actionsAdd[actionsAdd.length - 5] = new DialogWrapperAction("保存配置一") {
+            @Override
+            protected void doAction(ActionEvent actionEvent) {
+                String value = ModelUtil.toJson(data);
+                PropertiesComponent.getInstance().setValue(Constants.SAVE_KEY_ALL_CONFIG_1, value);
+                showTipsAlert("保存成功");
+            }
+        };
+        actionsAdd[actionsAdd.length - 4] = new DialogWrapperAction("保存配置二") {
+            @Override
+            protected void doAction(ActionEvent actionEvent) {
+                String value = ModelUtil.toJson(data);
+                PropertiesComponent.getInstance().setValue(Constants.SAVE_KEY_ALL_CONFIG_2, value);
+                showTipsAlert("保存成功");
+            }
+        };
+        actionsAdd[actionsAdd.length - 3] = new DialogWrapperAction("配置一") {
+            @Override
+            protected void doAction(ActionEvent actionEvent) {
+                String value = PropertiesComponent.getInstance().getValue(Constants.SAVE_KEY_ALL_CONFIG_1, Constants.INIT_MODEL_JSON);
+                PropertiesComponent.getInstance().setValue(Constants.CURRENT_SAVE_KEY,Constants.SAVE_KEY_ALL_CONFIG_1);
+                data = ModelUtil.fromJson(value);
+                addInitialFields(suffixType);
+                setLayoutConstraints();
+                layout.invalidateLayout(controlPanel);
+            }
+        };
+        actionsAdd[actionsAdd.length - 2] = new DialogWrapperAction("配置二") {
+            @Override
+            protected void doAction(ActionEvent actionEvent) {
+                String value = PropertiesComponent.getInstance().getValue(Constants.SAVE_KEY_ALL_CONFIG_2, Constants.INIT_MODEL_JSON);
+                PropertiesComponent.getInstance().setValue(Constants.CURRENT_SAVE_KEY,Constants.SAVE_KEY_ALL_CONFIG_2);
+                data = ModelUtil.fromJson(value);
+                addInitialFields(suffixType);
+                setLayoutConstraints();
+                layout.invalidateLayout(controlPanel);
+            }
+        };
         actionsAdd[actionsAdd.length - 1] = new DialogWrapperAction("Add Configuration") {
             @Override
             protected void doAction(ActionEvent actionEvent) {
@@ -214,7 +242,7 @@ public class SingleDimenDialog extends DialogWrapper {
                     bucketLabels.add(bucketValue);
                     JTextField scaleFactor = new JTextField();
                     scaleFactor.setColumns(20);
-                    scaleFactor.setText("1");
+                    scaleFactor.setText("3");
                     bucketScaleFactors.add(scaleFactor);
                     final JCheckBox selectedBucket = new JCheckBox();
                     selectedBucket.setSelected(true);
@@ -256,9 +284,9 @@ public class SingleDimenDialog extends DialogWrapper {
 
                             if (suffixType.equals("dp")) {
                                 dimen.setFactorDp(val);
-                            } else if (suffixType.equals("px")){
+                            } else if (suffixType.equals("px")) {
                                 dimen.setFactorPx(val);
-                            }else {
+                            } else {
                                 dimen.setFactorSp(val);
                             }
                         }
@@ -329,6 +357,13 @@ public class SingleDimenDialog extends DialogWrapper {
     public void showAlert(int option) {
         JOptionPane optionPane = new JOptionPane(Constants.MESSAGES[option - 1], JOptionPane.WARNING_MESSAGE);
         JDialog dialog = optionPane.createDialog(Constants.ERROR_TITLE);
+        dialog.setAlwaysOnTop(true);
+        dialog.setVisible(true);
+    }
+
+    public void showTipsAlert(String text) {
+        JOptionPane optionPane = new JOptionPane(text, JOptionPane.INFORMATION_MESSAGE);
+        JDialog dialog = optionPane.createDialog(Constants.TIPS_TITLE);
         dialog.setAlwaysOnTop(true);
         dialog.setVisible(true);
     }
