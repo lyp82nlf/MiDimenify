@@ -1,3 +1,5 @@
+package actions;
+
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -11,7 +13,6 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
-import com.intellij.util.ui.JBValue;
 import model.Dimen;
 import model.TmpBean;
 import util.Constants;
@@ -112,7 +113,7 @@ public abstract class AbstractDimenAction extends AnAction {
         dialog.setVisible(true);
     }
 
-    protected void createDirectoriesAndFilesIfNeeded(PsiDirectory psiParent) {
+    protected void createDirectoriesAndFilesIfNeeded(PsiDirectory psiParent, String targetFileName) {
         for (Dimen datum : data) {
             if (datum.isSelected()) {
                 WriteCommandAction.runWriteCommandAction(project, () -> {
@@ -125,20 +126,20 @@ public abstract class AbstractDimenAction extends AnAction {
                         PsiFile psiFile = subDirectory.createFile(Constants.FILE_NAME);
                         Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
                         document.setText(Constants.RESOURCES_TEXT);
-                        fileCreationCompleteAndCheck();
+                        fileCreationCompleteAndCheck(targetFileName);
 
                     } else {
-                        fileCreationCompleteAndCheck();
+                        fileCreationCompleteAndCheck(targetFileName);
                     }
                 });
             }
         }
     }
 
-    protected void fileCreationCompleteAndCheck() {
+    protected void fileCreationCompleteAndCheck(String targetFileName) {
         int value = fileCreationCount.incrementAndGet();
         if (value == getSelectedCount(data)) {
-            calculateAndWriteScaledValueToFiles();
+            calculateAndWriteScaledValueToFiles(targetFileName);
         }
     }
 
@@ -164,7 +165,7 @@ public abstract class AbstractDimenAction extends AnAction {
         return file != null && file.getName().endsWith(".xml") && file.getParent().getName().startsWith("values");
     }
 
-    protected abstract void calculateAndWriteScaledValueToFiles();
+    protected abstract void calculateAndWriteScaledValueToFiles(String targetFileName);
 
     protected XmlTag[] getDimenValuesInFile(XmlFile xmlFile) {
         XmlTag[] dimens = null;
@@ -193,7 +194,7 @@ public abstract class AbstractDimenAction extends AnAction {
             String val = tag.getValue().getText().toLowerCase();
             try {
                 hashMap.put(tag.getAttribute("name").getValue(),
-                        new TmpBean(Float.parseFloat(val.substring(0, val.length() - 2)), val.substring(val.length() - 2)));
+                        new TmpBean(Float.parseFloat(val.substring(0, val.length() - 2)), val.substring(val.length() - 2), data.get(bucketIndex)));
             } catch (NumberFormatException | ArithmeticException e) {
                 e.printStackTrace();
             }
@@ -202,11 +203,11 @@ public abstract class AbstractDimenAction extends AnAction {
         return hashMap;
     }
 
-    protected void writeScaledValuesToFiles(PsiDirectory directory, HashMap<String, TmpBean> floatDimen) {
+    protected void writeScaledValuesToFiles(PsiDirectory directory, HashMap<String, TmpBean> floatDimen, String fileName) {
 
         for (int i = 0; i < data.size(); i++) {
             if (data.get(i).isSelected()) {
-                PsiFile file = directory.findSubdirectory(data.get(i).getDirectory()).findFile(Constants.FILE_NAME);
+                PsiFile file = directory.findSubdirectory(data.get(i).getDirectory()).findFile(fileName);
                 if (file instanceof XmlFile) {
                     XmlFile xmlFile = (XmlFile) file;
                     XmlTag[] tags = getDimenValuesInFile(xmlFile);
@@ -218,6 +219,49 @@ public abstract class AbstractDimenAction extends AnAction {
                             Document document = PsiDocumentManager.getInstance(project).getDocument(file);
                             document.setReadOnly(false);
                             String text = document.getText();
+                            boolean isTagExist = false;
+                            String replaceTarget = "", before = "";
+                            for (int j = 0; tags != null && j < tags.length; j++) {
+                                XmlTag tag = tags[j];
+                                String name = tag.getAttribute("name").getValue();
+                                //找到的话
+                                if (floatDimen.containsKey(name)) {
+                                    isTagExist = true;
+                                    replaceTarget = MessageFormat.format(Constants.PLACEHOLDER_DIMEN, name
+                                            , getFormattedValue(calculateRes(floatDimen.get(name),data.get(bucketIndex)))
+                                            , floatDimen.get(name).getType());
+                                    before = MessageFormat.format(Constants.PLACEHOLDER_DIMEN, name
+                                            , tag.getValue().getText().toString()
+                                            , "");
+                                    break;
+                                }
+                            }
+                            if (isTagExist) {
+                                document.setText(text.replace(before, replaceTarget));
+                                return;
+                            }
+                            boolean isHasAnnotation = text.contains("<!--");
+                            String dimenStr = "</dimen>";
+                            int lastDimen = text.lastIndexOf(dimenStr);
+                            if (lastDimen >= 0 && isHasAnnotation) {
+                                //存在dimen 标签
+                                String pre = text.substring(0, lastDimen + dimenStr.length());
+                                String end = text.substring(lastDimen + dimenStr.length(), text.length());
+
+                                Set<String> setDp = new HashSet<String>(floatDimen.keySet());
+                                //追加到最后
+                                for (String name : setDp) {
+                                    String dimenFormattedString = MessageFormat.format(Constants.PLACEHOLDER_DIMEN, name
+                                            , getFormattedValue(calculateRes(floatDimen.get(name), data.get(bucketIndex)))
+                                            , floatDimen.get(name).getType());
+                                    stringBuilder.append(dimenFormattedString);
+                                }
+                                String res = pre + "\n" + stringBuilder.toString() + end;
+                                document.setText(res);
+                                return;
+                            }
+
+
                             int indexStart = text.indexOf("<resources");
                             if (indexStart != -1) {
                                 int index = text.indexOf(">", indexStart) + 1;
@@ -229,7 +273,7 @@ public abstract class AbstractDimenAction extends AnAction {
                                     String name = tag.getAttribute("name").getValue();
                                     if (floatDimen.containsKey(name)) {
                                         String dimenFormattedString = MessageFormat.format(Constants.PLACEHOLDER_DIMEN, name
-                                                , getFormattedValue(floatDimen.get(name).getNum() / data.get(bucketIndex).getFactor())
+                                                , getFormattedValue(calculateRes(floatDimen.get(name), data.get(bucketIndex)))
                                                 , floatDimen.get(name).getType());
                                         stringBuilder.append(dimenFormattedString);
                                         setDp.remove(name);
@@ -242,7 +286,7 @@ public abstract class AbstractDimenAction extends AnAction {
                                 }
                                 for (String name : setDp) {
                                     String dimenFormattedString = MessageFormat.format(Constants.PLACEHOLDER_DIMEN, name
-                                            , getFormattedValue(floatDimen.get(name).getNum() / data.get(bucketIndex).getFactorDp())
+                                            , getFormattedValue(calculateRes(floatDimen.get(name),data.get(bucketIndex)))
                                             , floatDimen.get(name).getType());
                                     stringBuilder.append(dimenFormattedString);
                                 }
@@ -259,6 +303,17 @@ public abstract class AbstractDimenAction extends AnAction {
         }
 
 
+    }
+
+    public float calculateRes(TmpBean originBean, Dimen toDimen) {
+        switch (originBean.getCalculateType().toLowerCase()) {
+            case "sp":
+            case "dp":
+                return originBean.getNum() * originBean.getFactorDp() / toDimen.getFactor();
+            case "px":
+            default:
+                return originBean.getNum() / toDimen.getFactor();
+        }
     }
 
     protected abstract String getSaveKey();

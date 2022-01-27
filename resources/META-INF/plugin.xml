@@ -10,7 +10,7 @@
     You can choose for yourself the directory you need to build The plug-in will automatically help you store your configuration options</h3>]]></description>
 
     <change-notes><![CDATA[
-    <h3>Two new configuration items have been added, which can be used to switch between different configurations</h3>]]></change-notes>
+    <h3>Adapted to dp2dp</h3>]]></change-notes>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for description -->
     <idea-version since-build="173.0"/>
@@ -25,16 +25,16 @@
 
     <actions>
         <!-- Add your actions here -->
-        <action id="com.xiaomi.dsg" class="GenerateAction" text="Use the All Configuration to Generate" description="Auto generate dimens With all configs">
+        <action id="com.xiaomi.dsg" class="actions.GenerateAction" text="Use the All Configuration to Generate" description="Auto generate dimens With all configs">
             <add-to-group group-id="GenerateGroup" anchor="first"/>
         </action>
 
-        <action id="com.xiaomi.dsg.config2" class="GenerateActionBySecondConfig" text="Use the First Configuration to Generate" description="Auto generate dimens By second config">
+        <action id="com.xiaomi.dsg.config2" class="actions.GenerateActionBySecondConfig" text="Use the Second Configuration to Generate" description="Auto generate dimens By second config">
             <add-to-group group-id="GenerateGroup" anchor="first"/>
             <keyboard-shortcut first-keystroke="F8" keymap="$default"/>
         </action>
 
-        <action id="com.xiaomi.dsg.config1" class="GenerateActionByFirstConfig" text="Use the Second Configuration to Generate" description="Auto generate dimens By first config">
+        <action id="com.xiaomi.dsg.config1" class="actions.GenerateActionByFirstConfig" text="Use the First Configuration to Generate" description="Auto generate dimens By first config">
             <add-to-group group-id="GenerateGroup" anchor="first"/>
             <keyboard-shortcut first-keystroke="F7" keymap="$default"/>
         </action>

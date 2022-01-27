@@ -1,3 +1,6 @@
+package actions;
+
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
@@ -10,7 +13,7 @@ import com.intellij.psi.impl.source.xml.XmlTagImpl;
 import com.intellij.psi.impl.source.xml.XmlTextImpl;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
-import dialog.SingleDimenDialog;
+import dialog.SingleDimenAllConfigDialog;
 import model.Dimen;
 import model.TmpBean;
 import util.Constants;
@@ -19,7 +22,7 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GenerateActionByFirstConfig extends AbstractDimenAction {
+public class GenerateAction extends AbstractDimenAction {
     String attributeName;
 
 
@@ -104,21 +107,22 @@ public class GenerateActionByFirstConfig extends AbstractDimenAction {
                     if (attribute != null) {
                         attributeName = attribute.getValue();
                         String val = value.getValue().toLowerCase().trim();
-                        showScaleDialog(val.substring(val.length() - 2));
+                        showScaleDialog(val.substring(val.length() - 2), xmlFile.getOriginalFile().getName());
                     }
                 }
             }
         }
     }
 
-    private void showScaleDialog(String suffixType) {
-        SingleDimenDialog singleDimenDialog = new SingleDimenDialog(project, suffixType, data,"(First Config)");
+    public void showScaleDialog(String suffixType, String fileName) {
+        SingleDimenAllConfigDialog singleDimenDialog = new SingleDimenAllConfigDialog(project, suffixType, data);
         singleDimenDialog.show();
         int invalidIndex = singleDimenDialog.invalidBucketIndex();
         if (singleDimenDialog.isOK() && invalidIndex == -1) {
             ArrayList<Dimen> data = singleDimenDialog.getConversionValues();
             saveValues(data);
-            createDirectoriesAndFilesIfNeeded(psiFile.getParent().getParent());
+            String targetFileName = (fileName == null || fileName.length() <= 0) ? Constants.FILE_NAME : fileName;
+            createDirectoriesAndFilesIfNeeded(psiFile.getParent().getParent(), targetFileName);
 
         } else if (singleDimenDialog.isOK()) {
             singleDimenDialog.showAlert(invalidIndex);
@@ -126,7 +130,7 @@ public class GenerateActionByFirstConfig extends AbstractDimenAction {
     }
 
     @Override
-    protected void calculateAndWriteScaledValueToFiles() {
+    protected void calculateAndWriteScaledValueToFiles(String fileName) {
         if (currentBucketIndex >= data.size()) {
             showAlert(4);
             return;
@@ -145,12 +149,13 @@ public class GenerateActionByFirstConfig extends AbstractDimenAction {
         }
         if (dimens.length > 0) {
             HashMap<String, TmpBean> floatDimen = normalizeToHashMap(dimens, currentBucketIndex);
-            writeScaledValuesToFiles(psiFile.getParent().getParent(), floatDimen);
+            writeScaledValuesToFiles(psiFile.getParent().getParent(), floatDimen,fileName);
         }
     }
 
+
     @Override
     protected String getSaveKey() {
-        return Constants.SAVE_KEY_FIRST_CONFIG;
+        return PropertiesComponent.getInstance().getValue(Constants.CURRENT_SAVE_KEY, Constants.SAVE_KEY_ALL_CONFIG_1);
     }
 }
